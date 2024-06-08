@@ -143,7 +143,7 @@ const (
 	ButtonFlagsNoKeyModifiers ButtonFlagsPrivate = 65536
 	// don't set ActiveId while holding the mouse (ImGuiButtonFlags_PressedOnClick only)
 	ButtonFlagsNoHoldingActiveId ButtonFlagsPrivate = 131072
-	// don't override navigation focus when activated (FIXME: this is essentially used everytime an item uses ImGuiItemFlags_NoNav, but because legacy specs don't requires LastItemData to be set ButtonBehavior(), we can't poll g.LastItemData.InFlags)
+	// don't override navigation focus when activated (FIXME: this is essentially used every time an item uses ImGuiItemFlags_NoNav, but because legacy specs don't requires LastItemData to be set ButtonBehavior(), we can't poll g.LastItemData.InFlags)
 	ButtonFlagsNoNavFocus ButtonFlagsPrivate = 262144
 	// don't report as hovered when nav focus is on this item
 	ButtonFlagsNoHoveredOnFocus ButtonFlagsPrivate = 524288
@@ -166,9 +166,9 @@ const (
 	// React on right mouse button
 	ButtonFlagsMouseButtonRight ButtonFlags = 2
 	// React on center mouse button
-	ButtonFlagsMouseButtonMiddle  ButtonFlags = 4
-	ButtonFlagsMouseButtonMask    ButtonFlags = 7
-	ButtonFlagsMouseButtonDefault ButtonFlags = 1
+	ButtonFlagsMouseButtonMiddle ButtonFlags = 4
+	// [Internal]
+	ButtonFlagsMouseButtonMask ButtonFlags = 7
 )
 
 // Flags for ImGui::BeginChild()
@@ -519,7 +519,7 @@ const (
 )
 
 // A cardinal direction
-// original name: ImGuiDir_
+// original name: ImGuiDir
 type Dir int32
 
 const (
@@ -739,7 +739,52 @@ const (
 	InputEventTypeCOUNT         InputEventType = 8
 )
 
+// Extend ImGuiInputFlags_
 // Flags for extended versions of IsKeyPressed(), IsMouseClicked(), Shortcut(), SetKeyOwner(), SetItemKeyOwner()
+// Don't mistake with ImGuiInputTextFlags! (which is for ImGui::InputText() function)
+// original name: ImGuiInputFlagsPrivate_
+type InputFlagsPrivate int32
+
+const (
+	// Repeat rate: Regular (default)
+	InputFlagsRepeatRateDefault InputFlagsPrivate = 2
+	// Repeat rate: Fast
+	InputFlagsRepeatRateNavMove InputFlagsPrivate = 4
+	// Repeat rate: Faster
+	InputFlagsRepeatRateNavTweak InputFlagsPrivate = 8
+	// Stop repeating when released (default for all functions except Shortcut). This only exists to allow overriding Shortcut() default behavior.
+	InputFlagsRepeatUntilRelease InputFlagsPrivate = 16
+	// Stop repeating when released OR if keyboard mods are changed (default for Shortcut)
+	InputFlagsRepeatUntilKeyModsChange InputFlagsPrivate = 32
+	// Stop repeating when released OR if keyboard mods are leaving the None state. Allows going from Mod+Key to Key by releasing Mod.
+	InputFlagsRepeatUntilKeyModsChangeFromNone InputFlagsPrivate = 64
+	// Stop repeating when released OR if any other keyboard key is pressed during the repeat
+	InputFlagsRepeatUntilOtherKeyPress InputFlagsPrivate = 128
+	// Further accesses to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared at end of frame.
+	InputFlagsLockThisFrame InputFlagsPrivate = 1048576
+	// Further accesses to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared when the key is released or at end of each frame if key is released.
+	InputFlagsLockUntilRelease InputFlagsPrivate = 2097152
+	// Only set if item is hovered (default to both)
+	InputFlagsCondHovered InputFlagsPrivate = 4194304
+	// Only set if item is active (default to both)
+	InputFlagsCondActive                     InputFlagsPrivate = 8388608
+	InputFlagsCondDefault                    InputFlagsPrivate = 12582912
+	InputFlagsRepeatRateMask                 InputFlagsPrivate = 14
+	InputFlagsRepeatUntilMask                InputFlagsPrivate = 240
+	InputFlagsRepeatMask                     InputFlagsPrivate = 255
+	InputFlagsCondMask                       InputFlagsPrivate = 12582912
+	InputFlagsRouteTypeMask                  InputFlagsPrivate = 15360
+	InputFlagsRouteOptionsMask               InputFlagsPrivate = 245760
+	InputFlagsSupportedByIsKeyPressed        InputFlagsPrivate = 255
+	InputFlagsSupportedByIsMouseClicked      InputFlagsPrivate = 1
+	InputFlagsSupportedByShortcut            InputFlagsPrivate = 261375
+	InputFlagsSupportedBySetNextItemShortcut InputFlagsPrivate = 523519
+	InputFlagsSupportedBySetKeyOwner         InputFlagsPrivate = 3145728
+	InputFlagsSupportedBySetItemKeyOwner     InputFlagsPrivate = 15728640
+)
+
+// Flags for Shortcut(), SetNextItemShortcut(),
+// (and for upcoming extended versions of IsKeyPressed(), IsMouseClicked(), Shortcut(), SetKeyOwner(), SetItemKeyOwner() that are still in imgui_internal.h)
 // Don't mistake with ImGuiInputTextFlags! (which is for ImGui::InputText() function)
 // original name: ImGuiInputFlags_
 type InputFlags int32
@@ -748,52 +793,24 @@ const (
 	InputFlagsNone InputFlags = 0
 	// Enable repeat. Return true on successive repeats. Default for legacy IsKeyPressed(). NOT Default for legacy IsMouseClicked(). MUST BE == 1.
 	InputFlagsRepeat InputFlags = 1
-	// Repeat rate: Regular (default)
-	InputFlagsRepeatRateDefault InputFlags = 2
-	// Repeat rate: Fast
-	InputFlagsRepeatRateNavMove InputFlags = 4
-	// Repeat rate: Faster
-	InputFlagsRepeatRateNavTweak InputFlags = 8
-	// Stop repeating when released (default for all functions except Shortcut). This only exists to allow overriding Shortcut() default behavior.
-	InputFlagsRepeatUntilRelease InputFlags = 16
-	// Stop repeating when released OR if keyboard mods are changed (default for Shortcut)
-	InputFlagsRepeatUntilKeyModsChange InputFlags = 32
-	// Stop repeating when released OR if keyboard mods are leaving the None state. Allows going from Mod+Key to Key by releasing Mod.
-	InputFlagsRepeatUntilKeyModsChangeFromNone InputFlags = 64
-	// Stop repeating when released OR if any other keyboard key is pressed during the repeat
-	InputFlagsRepeatUntilOtherKeyPress InputFlags = 128
-	// Only set if item is hovered (default to both)
-	InputFlagsCondHovered InputFlags = 256
-	// Only set if item is active (default to both)
-	InputFlagsCondActive  InputFlags = 512
-	InputFlagsCondDefault InputFlags = 768
-	// Further accesses to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared at end of frame.
-	InputFlagsLockThisFrame InputFlags = 1024
-	// Further accesses to key data will require EXPLICIT owner ID (ImGuiKeyOwner_Any/0 will NOT accepted for polling). Cleared when the key is released or at end of each frame if key is released.
-	InputFlagsLockUntilRelease InputFlags = 2048
-	// (Default) Honor focus route: Accept inputs if window is in focus stack. Deep-most focused window takes inputs. ActiveId takes inputs over deep-most focused window.
-	InputFlagsRouteFocused InputFlags = 4096
-	// Register route globally (lowest priority: unless a focused window or active item registered the route) -> recommended Global priority IF you need a Global priority.
-	InputFlagsRouteGlobalLow InputFlags = 8192
-	// Register route globally (medium priority: unless an active item registered the route, e.g. CTRL+A registered by InputText will take priority over this).
-	InputFlagsRouteGlobal InputFlags = 16384
-	// Register route globally (higher priority: unlikely you need to use that: will interfere with every active items, e.g. CTRL+A registered by InputText will be overriden by this)
-	InputFlagsRouteGlobalHigh InputFlags = 32768
+	// Route to active item only.
+	InputFlagsRouteActive InputFlags = 1024
+	// Route to windows in the focus stack (DEFAULT). Deep-most focused window takes inputs. Active item takes inputs over deep-most focused window.
+	InputFlagsRouteFocused InputFlags = 2048
+	// Global route (unless a focused window or active item registered the route).
+	InputFlagsRouteGlobal InputFlags = 4096
 	// Do not register route, poll keys directly.
-	InputFlagsRouteAlways InputFlags = 65536
-	// Global routes will not be applied if underlying background/void is focused (== no Dear ImGui windows are focused). Useful for overlay applications.
-	InputFlagsRouteUnlessBgFocused InputFlags = 131072
-	InputFlagsRepeatRateMask       InputFlags = 14
-	InputFlagsRepeatUntilMask      InputFlags = 240
-	InputFlagsRepeatMask           InputFlags = 255
-	InputFlagsCondMask             InputFlags = 768
-	// _Always not part of this!
-	InputFlagsRouteMask                  InputFlags = 61440
-	InputFlagsSupportedByIsKeyPressed    InputFlags = 255
-	InputFlagsSupportedByIsMouseClicked  InputFlags = 1
-	InputFlagsSupportedByShortcut        InputFlags = 258303
-	InputFlagsSupportedBySetKeyOwner     InputFlags = 3072
-	InputFlagsSupportedBySetItemKeyOwner InputFlags = 3840
+	InputFlagsRouteAlways InputFlags = 8192
+	// Option: global route: higher priority than focused route (unless active item in focused route).
+	InputFlagsRouteOverFocused InputFlags = 16384
+	// Option: global route: higher priority than active item. Unlikely you need to use that: will interfere with every active items, e.g. CTRL+A registered by InputText will be overridden by this. May not be fully honored as user/internal code is likely to always assume they can access keys when active.
+	InputFlagsRouteOverActive InputFlags = 32768
+	// Option: global route: will not be applied if underlying background/void is focused (== no Dear ImGui windows are focused). Useful for overlay applications.
+	InputFlagsRouteUnlessBgFocused InputFlags = 65536
+	// Option: route evaluated from the point of view of root window rather than current window.
+	InputFlagsRouteFromRootWindow InputFlags = 131072
+	// Automatically display a tooltip when hovering item [BETA] Unsure of right api (opt-in/opt-out)
+	InputFlagsTooltip InputFlags = 262144
 )
 
 // original name: ImGuiInputSource
@@ -805,9 +822,7 @@ const (
 	InputSourceMouse    InputSource = 1
 	InputSourceKeyboard InputSource = 2
 	InputSourceGamepad  InputSource = 3
-	// Currently only used by InputText()
-	InputSourceClipboard InputSource = 4
-	InputSourceCOUNT     InputSource = 5
+	InputSourceCOUNT    InputSource = 4
 )
 
 // Extend ImGuiInputTextFlags_
@@ -821,6 +836,8 @@ const (
 	InputTextFlagsNoMarkEdited InputTextFlagsPrivate = 134217728
 	// For internal use by TempInputText(), will skip calling ItemAdd(). Require bounding-box to strictly match.
 	InputTextFlagsMergedItem InputTextFlagsPrivate = 268435456
+	// For internal use by InputScalar() and TempInputScalar()
+	InputTextFlagsLocalizeDecimalPoint InputTextFlagsPrivate = 536870912
 )
 
 // Flags for ImGui::InputText()
@@ -834,44 +851,48 @@ const (
 	InputTextFlagsCharsDecimal InputTextFlags = 1
 	// Allow 0123456789ABCDEFabcdef
 	InputTextFlagsCharsHexadecimal InputTextFlags = 2
+	// Allow 0123456789.+-*/eE (Scientific notation input)
+	InputTextFlagsCharsScientific InputTextFlags = 4
 	// Turn a..z into A..Z
-	InputTextFlagsCharsUppercase InputTextFlags = 4
+	InputTextFlagsCharsUppercase InputTextFlags = 8
 	// Filter out spaces, tabs
-	InputTextFlagsCharsNoBlank InputTextFlags = 8
-	// Select entire text when first taking mouse focus
-	InputTextFlagsAutoSelectAll InputTextFlags = 16
-	// Return 'true' when Enter is pressed (as opposed to every time the value was modified). Consider looking at the IsItemDeactivatedAfterEdit() function.
-	InputTextFlagsEnterReturnsTrue InputTextFlags = 32
-	// Callback on pressing TAB (for completion handling)
-	InputTextFlagsCallbackCompletion InputTextFlags = 64
-	// Callback on pressing Up/Down arrows (for history handling)
-	InputTextFlagsCallbackHistory InputTextFlags = 128
-	// Callback on each iteration. User code may query cursor position, modify text buffer.
-	InputTextFlagsCallbackAlways InputTextFlags = 256
-	// Callback on character inputs to replace or discard them. Modify 'EventChar' to replace or discard, or return 1 in callback to discard.
-	InputTextFlagsCallbackCharFilter InputTextFlags = 512
+	InputTextFlagsCharsNoBlank InputTextFlags = 16
 	// Pressing TAB input a '\t' character into the text field
-	InputTextFlagsAllowTabInput InputTextFlags = 1024
-	// In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter (default is opposite: unfocus with Ctrl+Enter, add line with Enter).
-	InputTextFlagsCtrlEnterForNewLine InputTextFlags = 2048
-	// Disable following the cursor horizontally
-	InputTextFlagsNoHorizontalScroll InputTextFlags = 4096
-	// Overwrite mode
-	InputTextFlagsAlwaysOverwrite InputTextFlags = 8192
+	InputTextFlagsAllowTabInput InputTextFlags = 32
+	// Return 'true' when Enter is pressed (as opposed to every time the value was modified). Consider looking at the IsItemDeactivatedAfterEdit() function.
+	InputTextFlagsEnterReturnsTrue InputTextFlags = 64
+	// Escape key clears content if not empty, and deactivate otherwise (contrast to default behavior of Escape to revert)
+	InputTextFlagsEscapeClearsAll InputTextFlags = 128
+	// In multi-line mode, validate with Enter, add new line with Ctrl+Enter (default is opposite: validate with Ctrl+Enter, add line with Enter).
+	InputTextFlagsCtrlEnterForNewLine InputTextFlags = 256
 	// Read-only mode
-	InputTextFlagsReadOnly InputTextFlags = 16384
-	// Password mode, display all characters as '*'
-	InputTextFlagsPassword InputTextFlags = 32768
+	InputTextFlagsReadOnly InputTextFlags = 512
+	// Password mode, display all characters as '*', disable copy
+	InputTextFlagsPassword InputTextFlags = 1024
+	// Overwrite mode
+	InputTextFlagsAlwaysOverwrite InputTextFlags = 2048
+	// Select entire text when first taking mouse focus
+	InputTextFlagsAutoSelectAll InputTextFlags = 4096
+	// InputFloat(), InputInt(), InputScalar() etc. only: parse empty string as zero value.
+	InputTextFlagsParseEmptyRefVal InputTextFlags = 8192
+	// InputFloat(), InputInt(), InputScalar() etc. only: when value is zero, do not display it. Generally used with ImGuiInputTextFlags_ParseEmptyRefVal.
+	InputTextFlagsDisplayEmptyRefVal InputTextFlags = 16384
+	// Disable following the cursor horizontally
+	InputTextFlagsNoHorizontalScroll InputTextFlags = 32768
 	// Disable undo/redo. Note that input text owns the text data while active, if you want to provide your own undo/redo stack you need e.g. to call ClearActiveID().
 	InputTextFlagsNoUndoRedo InputTextFlags = 65536
-	// Allow 0123456789.+-*/eE (Scientific notation input)
-	InputTextFlagsCharsScientific InputTextFlags = 131072
+	// Callback on pressing TAB (for completion handling)
+	InputTextFlagsCallbackCompletion InputTextFlags = 131072
+	// Callback on pressing Up/Down arrows (for history handling)
+	InputTextFlagsCallbackHistory InputTextFlags = 262144
+	// Callback on each iteration. User code may query cursor position, modify text buffer.
+	InputTextFlagsCallbackAlways InputTextFlags = 524288
+	// Callback on character inputs to replace or discard them. Modify 'EventChar' to replace or discard, or return 1 in callback to discard.
+	InputTextFlagsCallbackCharFilter InputTextFlags = 1048576
 	// Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this)
-	InputTextFlagsCallbackResize InputTextFlags = 262144
+	InputTextFlagsCallbackResize InputTextFlags = 2097152
 	// Callback on any edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active)
-	InputTextFlagsCallbackEdit InputTextFlags = 524288
-	// Escape key clears content if not empty, and deactivate otherwise (contrast to default behavior of Escape to revert)
-	InputTextFlagsEscapeClearsAll InputTextFlags = 1048576
+	InputTextFlagsCallbackEdit InputTextFlags = 4194304
 )
 
 // Flags used by upcoming items
@@ -935,8 +956,10 @@ const (
 	ItemStatusFlagsHoveredWindow ItemStatusFlags = 128
 	// [WIP] Set when item is overlapping the current clipping rectangle (Used internally. Please don't use yet: API/system will change as we refactor Itemadd()).
 	ItemStatusFlagsVisible ItemStatusFlags = 256
-	// g.LastItemData.ClipRect is valid
+	// g.LastItemData.ClipRect is valid.
 	ItemStatusFlagsHasClipRect ItemStatusFlags = 512
+	// g.LastItemData.Shortcut valid. Set by SetNextItemShortcut() -> ItemAdd().
+	ItemStatusFlagsHasShortcut ItemStatusFlags = 1024
 )
 
 // A key identifier (ImGuiKey_XXX or ImGuiMod_XXX value): can represent Keyboard, Mouse and Gamepad values.
@@ -1143,18 +1166,16 @@ const (
 	KeyReservedForModSuper Key = 665
 	KeyCOUNT               Key = 666
 	ModNone                Key = 0
-	// Ctrl
+	// Ctrl (non-macOS), Cmd (macOS)
 	ModCtrl Key = 4096
 	// Shift
 	ModShift Key = 8192
 	// Option/Menu
 	ModAlt Key = 16384
-	// Cmd/Super/Windows
+	// Windows/Super (non-macOS), Ctrl (macOS)
 	ModSuper Key = 32768
-	// Alias for Ctrl (non-macOS) _or_ Super (macOS).
-	ModShortcut Key = 2048
-	// 5-bits
-	ModMask          Key = 63488
+	// 4-bits
+	ModMask          Key = 61440
 	KeyNamedKeyBEGIN Key = 512
 	KeyNamedKeyEND   Key = 666
 	KeyNamedKeyCOUNT Key = 154
@@ -1317,6 +1338,8 @@ const (
 	NavMoveFlagsNoSelect NavMoveFlags = 8192
 	// Do not alter the visible state of keyboard vs mouse nav highlight
 	NavMoveFlagsNoSetNavHighlight NavMoveFlags = 16384
+	// (Experimental) Do not clear active id when applying move result
+	NavMoveFlagsNoClearActiveId NavMoveFlags = 32768
 )
 
 // original name: ImGuiNextItemDataFlags_
@@ -1327,6 +1350,7 @@ const (
 	NextItemDataFlagsHasWidth    NextItemDataFlags = 1
 	NextItemDataFlagsHasOpen     NextItemDataFlags = 2
 	NextItemDataFlagsHasShortcut NextItemDataFlags = 4
+	NextItemDataFlagsHasRefVal   NextItemDataFlags = 8
 )
 
 // original name: ImGuiNextWindowDataFlags_
@@ -1343,9 +1367,10 @@ const (
 	NextWindowDataFlagsHasBgAlpha        NextWindowDataFlags = 64
 	NextWindowDataFlagsHasScroll         NextWindowDataFlags = 128
 	NextWindowDataFlagsHasChildFlags     NextWindowDataFlags = 256
-	NextWindowDataFlagsHasViewport       NextWindowDataFlags = 512
-	NextWindowDataFlagsHasDock           NextWindowDataFlags = 1024
-	NextWindowDataFlagsHasWindowClass    NextWindowDataFlags = 2048
+	NextWindowDataFlagsHasRefreshPolicy  NextWindowDataFlags = 512
+	NextWindowDataFlagsHasViewport       NextWindowDataFlags = 1024
+	NextWindowDataFlagsHasDock           NextWindowDataFlags = 2048
+	NextWindowDataFlagsHasWindowClass    NextWindowDataFlags = 4096
 )
 
 // Flags for internal's BeginColumns(). This is an obsolete API. Prefer using BeginTable() nowadays!
@@ -1526,7 +1551,7 @@ const (
 )
 
 // A sorting direction
-// original name: ImGuiSortDirection_
+// original name: ImGuiSortDirection
 type SortDirection int32
 
 const (
@@ -1541,8 +1566,9 @@ const (
 //   - The enum only refers to fields of ImGuiStyle which makes sense to be pushed/popped inside UI code.
 //     During initialization or between frames, feel free to just poke into ImGuiStyle directly.
 //   - Tip: Use your programming IDE navigation facilities on the names in the _second column_ below to find the actual members and their description.
-//     In Visual Studio IDE: CTRL+comma ("Edit.GoToAll") can follow symbols in comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
-//     With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
+//   - In Visual Studio: CTRL+comma ("Edit.GoToAll") can follow symbols inside comments, whereas CTRL+F12 ("Edit.GoToImplementation") cannot.
+//   - In Visual Studio w/ Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols inside comments.
+//   - In VS Code, CLion, etc.: CTRL+click can follow symbols inside comments.
 //   - When changing this enum, you need to update the associated internal table GStyleVarInfo[] accordingly. This is where we link enum values to members offset/type.
 //
 // original name: ImGuiStyleVar_
@@ -1595,21 +1621,27 @@ const (
 	StyleVarGrabRounding StyleVar = 21
 	// float     TabRounding
 	StyleVarTabRounding StyleVar = 22
+	// float     TabBorderSize
+	StyleVarTabBorderSize StyleVar = 23
 	// float     TabBarBorderSize
-	StyleVarTabBarBorderSize StyleVar = 23
+	StyleVarTabBarBorderSize StyleVar = 24
+	// float     TableAngledHeadersAngle
+	StyleVarTableAngledHeadersAngle StyleVar = 25
+	// ImVec2  TableAngledHeadersTextAlign
+	StyleVarTableAngledHeadersTextAlign StyleVar = 26
 	// ImVec2    ButtonTextAlign
-	StyleVarButtonTextAlign StyleVar = 24
+	StyleVarButtonTextAlign StyleVar = 27
 	// ImVec2    SelectableTextAlign
-	StyleVarSelectableTextAlign StyleVar = 25
-	// float  SeparatorTextBorderSize
-	StyleVarSeparatorTextBorderSize StyleVar = 26
+	StyleVarSelectableTextAlign StyleVar = 28
+	// float     SeparatorTextBorderSize
+	StyleVarSeparatorTextBorderSize StyleVar = 29
 	// ImVec2    SeparatorTextAlign
-	StyleVarSeparatorTextAlign StyleVar = 27
+	StyleVarSeparatorTextAlign StyleVar = 30
 	// ImVec2    SeparatorTextPadding
-	StyleVarSeparatorTextPadding StyleVar = 28
+	StyleVarSeparatorTextPadding StyleVar = 31
 	// float     DockingSeparatorSize
-	StyleVarDockingSeparatorSize StyleVar = 29
-	StyleVarCOUNT                StyleVar = 30
+	StyleVarDockingSeparatorSize StyleVar = 32
+	StyleVarCOUNT                StyleVar = 33
 )
 
 // Extend ImGuiTabBarFlags_
@@ -1936,16 +1968,18 @@ const (
 	TreeNodeFlagsLeaf TreeNodeFlags = 256
 	// Display a bullet instead of arrow. IMPORTANT: node can still be marked open/close if you don't set the _Leaf flag!
 	TreeNodeFlagsBullet TreeNodeFlags = 512
-	// Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding().
+	// Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding() before the node.
 	TreeNodeFlagsFramePadding TreeNodeFlags = 1024
-	// Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line. In the future we may refactor the hit system to be front-to-back, allowing natural overlaps and then this can become the default.
+	// Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line without using AllowOverlap mode.
 	TreeNodeFlagsSpanAvailWidth TreeNodeFlags = 2048
-	// Extend hit box to the left-most and right-most edges (bypass the indented area).
+	// Extend hit box to the left-most and right-most edges (cover the indent area).
 	TreeNodeFlagsSpanFullWidth TreeNodeFlags = 4096
+	// Narrow hit box + narrow hovering highlight, will only cover the label text.
+	TreeNodeFlagsSpanTextWidth TreeNodeFlags = 8192
 	// Frame will span all columns of its container table (text will still fit in current column)
-	TreeNodeFlagsSpanAllColumns TreeNodeFlags = 8192
+	TreeNodeFlagsSpanAllColumns TreeNodeFlags = 16384
 	// (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)
-	TreeNodeFlagsNavLeftJumpsBackHere TreeNodeFlags = 16384
+	TreeNodeFlagsNavLeftJumpsBackHere TreeNodeFlags = 32768
 	TreeNodeFlagsCollapsingHeader     TreeNodeFlags = 26
 )
 
@@ -2078,4 +2112,17 @@ const (
 	WindowFlagsChildMenu WindowFlags = 268435456
 	// Don't use! For internal use by Begin()/NewFrame()
 	WindowFlagsDockNodeHost WindowFlags = 536870912
+)
+
+// original name: ImGuiWindowRefreshFlags_
+type WindowRefreshFlags int32
+
+const (
+	WindowRefreshFlagsNone WindowRefreshFlags = 0
+	// [EXPERIMENTAL] Try to keep existing contents, USER MUST NOT HONOR BEGIN() RETURNING FALSE AND NOT APPEND.
+	WindowRefreshFlagsTryToAvoidRefresh WindowRefreshFlags = 1
+	// [EXPERIMENTAL] Always refresh on hover
+	WindowRefreshFlagsRefreshOnHover WindowRefreshFlags = 2
+	// [EXPERIMENTAL] Always refresh on focus
+	WindowRefreshFlagsRefreshOnFocus WindowRefreshFlags = 4
 )
